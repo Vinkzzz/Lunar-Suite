@@ -5,7 +5,7 @@ local ThemeManager = {} do
 
 	ThemeManager.Library = nil
 	ThemeManager.BuiltInThemes = {
-		['Default'] 		= { 1, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1c1c1c","AccentColor":"FFB6C1","BackgroundColor":"141414","OutlineColor":"323232"}') },
+		["Default"]         = { 1, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1c1c1c","AccentColor":"1A5276","BackgroundColor":"141414","OutlineColor":"323232"}') },
 		['BBot'] 			= { 2, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1e1e","AccentColor":"7e48a3","BackgroundColor":"232323","OutlineColor":"141414"}') },
 		['Fatality']		= { 3, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1842","AccentColor":"c50754","BackgroundColor":"191335","OutlineColor":"3c355d"}') },
 		['Jester'] 			= { 4, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"db4467","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') },
@@ -13,6 +13,13 @@ local ThemeManager = {} do
 		['Tokyo Night'] 	= { 6, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"191925","AccentColor":"6759b3","BackgroundColor":"16161f","OutlineColor":"323232"}') },
 		['Ubuntu'] 			= { 7, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"3e3e3e","AccentColor":"e2581e","BackgroundColor":"323232","OutlineColor":"191919"}') },
 		['Quartz'] 			= { 8, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"232330","AccentColor":"426e87","BackgroundColor":"1d1b26","OutlineColor":"27232f"}') },
+		["Midnight"]        = { 2, httpService:JSONDecode('{"FontColor":"f0f4ff","MainColor":"121826","AccentColor":"5b7fbf","BackgroundColor":"0c101c","OutlineColor":"2a3455"}') },
+        ["Arctic"]          = { 3, httpService:JSONDecode('{"FontColor":"f5faff","MainColor":"1a2639","AccentColor":"7ec8e3","BackgroundColor":"111c2a","OutlineColor":"2d4a66"}') },
+        ["Slate"]           = { 4, httpService:JSONDecode('{"FontColor":"f0f2f5","MainColor":"1e2633","AccentColor":"6d8a9e","BackgroundColor":"151c26","OutlineColor":"354252"}') },
+        ["Forest"]          = { 5, httpService:JSONDecode('{"FontColor":"ecf5ec","MainColor":"14231a","AccentColor":"4a8c6f","BackgroundColor":"0e1a13","OutlineColor":"26422e"}') },
+        ["Dusk"]            = { 6, httpService:JSONDecode('{"FontColor":"f4eef7","MainColor":"1f1a2e","AccentColor":"9b7bb8","BackgroundColor":"161224","OutlineColor":"362d4d"}') },
+        ["Ember"]           = { 7, httpService:JSONDecode('{"FontColor":"fff5ed","MainColor":"261a14","AccentColor":"d4784a","BackgroundColor":"1c110c","OutlineColor":"4d3121"}') },
+        ["Phantom"]         = { 8, httpService:JSONDecode('{"FontColor":"f0fcff","MainColor":"11181f","AccentColor":"38bdf8","BackgroundColor":"0a0f14","OutlineColor":"1e3241"}') },
 	}
 
 	function ThemeManager:ApplyTheme(theme)
