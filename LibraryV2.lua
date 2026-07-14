@@ -1,5 +1,6 @@
 --[[
-sweetttttt
+ego
+
 --]]
 
 -- ═════════════════════════════════════════════════════════════════════════════
@@ -170,45 +171,45 @@ local NOTIF_COLORS = {
     Info = Color3.fromRGB(80, 140, 220),
 }
 
-function Notify(opts)
+local function Notify(opts)
     opts = opts or {}
     
     -- Create notification GUI if it doesn't exist
     local notifGui = game.CoreGui:FindFirstChild("EthosNotifications")
     if not notifGui then
-        notifGui = new("ScreenGui", {
-            Name = "EthosNotifications",
-            IgnoreGuiInset = true,
-            ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-            DisplayOrder = 1000,
-            ResetOnSpawn = false,
-        })
-        local ok = pcall(function()
+        notifGui = Instance.new("ScreenGui")
+        notifGui.Name = "EthosNotifications"
+        notifGui.IgnoreGuiInset = true
+        notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        notifGui.DisplayOrder = 1000
+        notifGui.ResetOnSpawn = false
+        
+        local success, err = pcall(function()
             notifGui.Parent = game:GetService("CoreGui")
         end)
-        if not ok then
+        if not success then
             notifGui.Parent = LP:WaitForChild("PlayerGui")
         end
         
-        local holder = new("Frame", {
-            Name = "Holder",
-            Size = UDim2.fromScale(1, 1),
-            BackgroundTransparency = 1,
-            ZIndex = 1,
-        }, notifGui)
+        local holder = Instance.new("Frame")
+        holder.Name = "Holder"
+        holder.Size = UDim2.fromScale(1, 1)
+        holder.BackgroundTransparency = 1
+        holder.ZIndex = 1
+        holder.Parent = notifGui
         
-        local layout = new("UIListLayout", {
-            FillDirection = Enum.FillDirection.Vertical,
-            Padding = UDim.new(0, 6),
-            HorizontalAlignment = Enum.HorizontalAlignment.Right,
-            VerticalAlignment = Enum.VerticalAlignment.Bottom,
-            SortOrder = Enum.SortOrder.LayoutOrder,
-        }, holder)
+        local layout = Instance.new("UIListLayout")
+        layout.FillDirection = Enum.FillDirection.Vertical
+        layout.Padding = UDim.new(0, 6)
+        layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+        layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Parent = holder
         
-        new("UIPadding", {
-            PaddingRight = UDim.new(0, 14),
-            PaddingBottom = UDim.new(0, 14),
-        }, holder)
+        local padding = Instance.new("UIPadding")
+        padding.PaddingRight = UDim.new(0, 14)
+        padding.PaddingBottom = UDim.new(0, 14)
+        padding.Parent = holder
     end
     
     local notifHolder = notifGui:FindFirstChild("Holder")
@@ -218,77 +219,105 @@ function Notify(opts)
     local duration = opts.Duration or 4
 
     -- Create notification card
-    local card = new("Frame", {
-        Name = "Notif_" .. os.clock(),
-        Size = UDim2.fromOffset(280, 70),
-        BackgroundColor3 = C.NotifBg,
-        BackgroundTransparency = 0,
-        ClipsDescendants = true,
-        ZIndex = 10,
-    }, notifHolder)
-    corner(4, card)
-    stroke(C.Line, 1, 0.3, card)
+    local card = Instance.new("Frame")
+    card.Name = "Notif_" .. os.clock()
+    card.Size = UDim2.fromOffset(280, 70)
+    card.BackgroundColor3 = C.NotifBg
+    card.BackgroundTransparency = 0
+    card.ClipsDescendants = true
+    card.ZIndex = 10
+    card.Parent = notifHolder
+    
+    local cardCorner = Instance.new("UICorner")
+    cardCorner.CornerRadius = UDim.new(0, 4)
+    cardCorner.Parent = card
+    
+    local cardStroke = Instance.new("UIStroke")
+    cardStroke.Color = Color3.fromRGB(34, 35, 43)
+    cardStroke.Thickness = 1
+    cardStroke.Transparency = 0.3
+    cardStroke.Parent = card
 
     -- Left accent bar
-    local bar = new("Frame", {
-        Size = UDim2.new(0, 3, 1, 0),
-        BackgroundColor3 = accent,
-        ZIndex = 11,
-    }, card)
-    corner(2, bar)
+    local bar = Instance.new("Frame")
+    bar.Size = UDim2.new(0, 3, 1, 0)
+    bar.BackgroundColor3 = accent
+    bar.ZIndex = 11
+    bar.Parent = card
+    local barCorner = Instance.new("UICorner")
+    barCorner.CornerRadius = UDim.new(0, 2)
+    barCorner.Parent = bar
 
     -- Type pill
-    local pill = new("Frame", {
-        Size = UDim2.fromOffset(0, 16),
-        AutomaticSize = Enum.AutomaticSize.X,
-        Position = UDim2.new(0, 10, 0, 8),
-        BackgroundColor3 = accent,
-        ZIndex = 11,
-    }, card)
-    corner(3, pill)
+    local pill = Instance.new("Frame")
+    pill.Size = UDim2.fromOffset(0, 16)
+    pill.AutomaticSize = Enum.AutomaticSize.X
+    pill.Position = UDim2.new(0, 10, 0, 8)
+    pill.BackgroundColor3 = accent
+    pill.ZIndex = 11
+    pill.Parent = card
+    local pillCorner = Instance.new("UICorner")
+    pillCorner.CornerRadius = UDim.new(0, 3)
+    pillCorner.Parent = pill
     pad(5, 5, 0, 0, pill)
-    lbl({
-        Text = opts.Type or "Info",
-        TextColor3 = C.White,
-        TextSize = 10,
-        Size = UDim2.new(0, 0, 1, 0),
-        AutomaticSize = Enum.AutomaticSize.X,
-        ZIndex = 12,
-    }, pill)
+    
+    local pillText = Instance.new("TextLabel")
+    pillText.Size = UDim2.new(0, 0, 1, 0)
+    pillText.AutomaticSize = Enum.AutomaticSize.X
+    pillText.BackgroundTransparency = 1
+    pillText.Text = opts.Type or "Info"
+    pillText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    pillText.TextSize = 10
+    pillText.FontFace = FONT
+    pillText.TextXAlignment = Enum.TextXAlignment.Center
+    pillText.TextYAlignment = Enum.TextYAlignment.Center
+    pillText.ZIndex = 12
+    pillText.Parent = pill
 
-    lbl({
-        Text = opts.Title or "Notification",
-        TextColor3 = C.White,
-        TextSize = 13,
-        Size = UDim2.new(1, -14, 0, 18),
-        Position = UDim2.new(0, 10, 0, 27),
-        ZIndex = 11,
-    }, card)
+    -- Title
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -14, 0, 18)
+    titleLabel.Position = UDim2.new(0, 10, 0, 27)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = opts.Title or "Notification"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 13
+    titleLabel.FontFace = FONT
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+    titleLabel.ZIndex = 11
+    titleLabel.Parent = card
 
-    lbl({
-        Text = opts.Message or "",
-        TextColor3 = C.TextGray,
-        TextSize = 11,
-        Size = UDim2.new(1, -14, 0, 16),
-        Position = UDim2.new(0, 10, 0, 47),
-        ZIndex = 11,
-        TextTruncate = Enum.TextTruncate.AtEnd,
-    }, card)
+    -- Message
+    local msgLabel = Instance.new("TextLabel")
+    msgLabel.Size = UDim2.new(1, -14, 0, 16)
+    msgLabel.Position = UDim2.new(0, 10, 0, 47)
+    msgLabel.BackgroundTransparency = 1
+    msgLabel.Text = opts.Message or ""
+    msgLabel.TextColor3 = Color3.fromRGB(116, 116, 131)
+    msgLabel.TextSize = 11
+    msgLabel.FontFace = FONT
+    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
+    msgLabel.TextYAlignment = Enum.TextYAlignment.Center
+    msgLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    msgLabel.ZIndex = 11
+    msgLabel.Parent = card
 
     -- Progress bar
-    local progTrack = new("Frame", {
-        Size = UDim2.new(1, 0, 0, 2),
-        Position = UDim2.new(0, 0, 1, -2),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 38),
-        ZIndex = 12,
-    }, card)
-    local progFill = new("Frame", {
-        Size = UDim2.fromScale(1, 1),
-        BackgroundColor3 = accent,
-        ZIndex = 13,
-    }, progTrack)
+    local progTrack = Instance.new("Frame")
+    progTrack.Size = UDim2.new(1, 0, 0, 2)
+    progTrack.Position = UDim2.new(0, 0, 1, -2)
+    progTrack.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    progTrack.ZIndex = 12
+    progTrack.Parent = card
+    
+    local progFill = Instance.new("Frame")
+    progFill.Size = UDim2.fromScale(1, 1)
+    progFill.BackgroundColor3 = accent
+    progFill.ZIndex = 13
+    progFill.Parent = progTrack
 
-    -- Slide in
+    -- Slide in from right
     card.Position = UDim2.fromOffset(300, 0)
     tw(card, TI_MED, { Position = UDim2.fromOffset(0, 0) })
 
@@ -300,14 +329,18 @@ function Notify(opts)
     -- Auto dismiss
     task.delay(duration, function()
         tw(card, TI_MED, { Position = UDim2.fromOffset(310, 0) })
-        task.delay(0.25, function() card:Destroy() end)
+        task.delay(0.25, function()
+            card:Destroy()
+        end)
     end)
 
     -- Click to dismiss
     card.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             tw(card, TI_FAST, { Position = UDim2.fromOffset(310, 0) })
-            task.delay(0.15, function() card:Destroy() end)
+            task.delay(0.15, function()
+                card:Destroy()
+            end)
         end
     end)
 end
@@ -361,14 +394,10 @@ function ConfigSystem:LoadConfig(name)
     self:EnsureFolder()
     local folder = self:GetFolder() .. "/configs"
     local path = folder .. "/" .. name .. ".json"
-    if not isfile(path) then
-        return nil
-    end
+    if not isfile(path) then return nil end
     local json = readfile(path)
     local success, data = pcall(HttpService.JSONDecode, HttpService, json)
-    if success then
-        return data
-    end
+    if success then return data end
     return nil
 end
 
@@ -389,9 +418,7 @@ end
 local ThemeManager = nil
 
 local function loadThemeManager()
-    if ThemeManager then
-        return ThemeManager
-    end
+    if ThemeManager then return ThemeManager end
 
     local success, result = pcall(function()
         return loadstring(game:HttpGet("https://raw.githubusercontent.com/Vinkzzz/Lunar-Suite/refs/heads/main/ThemeManager.lua"))()
@@ -536,14 +563,10 @@ local function buildToggle(container, id, opts)
         set(not value)
     end)
 
-    if value then
-        set(true)
-    end
+    if value then set(true) end
 
     elementRef.Set = set
-    elementRef.Get = function()
-        return value
-    end
+    elementRef.Get = function() return value end
     elementRef._flag = opts.Flag
     elementRef._type = "toggle"
     return elementRef
@@ -643,9 +666,7 @@ local function buildSlider(container, id, opts)
 
     local function applyVal(v)
         v = math.clamp(v, minV, maxV)
-        if step > 0 then
-            v = math.round(v / step) * step
-        end
+        if step > 0 then v = math.round(v / step) * step end
         val = v
         local pct = (v - minV) / (maxV - minV)
         tw(fill, TI_FAST, { Size = UDim2.fromScale(pct, 1) })
@@ -684,9 +705,7 @@ local function buildSlider(container, id, opts)
     end)
 
     elementRef.Set = applyVal
-    elementRef.Get = function()
-        return val
-    end
+    elementRef.Get = function() return val end
     elementRef._flag = opts.Flag
     elementRef._type = "slider"
     return elementRef
@@ -907,16 +926,12 @@ local function buildDropdown(container, id, opts)
     end
 
     header.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            toggleOpen()
-        end
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then toggleOpen() end
     end)
     arrowImg.MouseButton1Up:Connect(toggleOpen)
 
     elementRef.Set = setSelected
-    elementRef.Get = function()
-        return selected
-    end
+    elementRef.Get = function() return selected end
     elementRef._flag = opts.Flag
     elementRef._type = "dropdown"
     return elementRef
@@ -1007,12 +1022,8 @@ local function buildInput(container, id, opts)
         end
     end)
 
-    elementRef.Set = function(v)
-        box.Text = v
-    end
-    elementRef.Get = function()
-        return box.Text
-    end
+    elementRef.Set = function(v) box.Text = v end
+    elementRef.Get = function() return box.Text end
     elementRef._flag = opts.Flag
     elementRef._type = "input"
     return elementRef
@@ -1072,26 +1083,19 @@ local function buildKeybind(container, id, opts)
     local clickBtn = clickArea(4, kbFrame)
 
     clickBtn.MouseButton1Up:Connect(function()
-        if listening then
-            return
-        end
+        if listening then return end
         listening = true
         keyLbl.Text = "..."
         tw(kbStroke, TI_FAST, { Color = C.Red })
 
         conn = UserInputService.InputBegan:Connect(function(inp, gp)
-            if gp then
-                return
-            end
+            if gp then return end
             if inp.UserInputType == Enum.UserInputType.Keyboard then
                 key = inp.KeyCode
                 keyLbl.Text = key.Name
                 listening = false
                 tw(kbStroke, TI_FAST, { Color = C.InputStroke })
-                if conn then
-                    conn:Disconnect()
-                    conn = nil
-                end
+                if conn then conn:Disconnect(); conn = nil end
                 if opts.Flag then
                     _G.EthosFlags = _G.EthosFlags or {}
                     _G.EthosFlags[opts.Flag] = key
@@ -1101,23 +1105,14 @@ local function buildKeybind(container, id, opts)
     end)
 
     UserInputService.InputBegan:Connect(function(inp, gp)
-        if gp or listening then
-            return
-        end
+        if gp or listening then return end
         if inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode == key then
-            if opts.Callback then
-                task.spawn(opts.Callback, key)
-            end
+            if opts.Callback then task.spawn(opts.Callback, key) end
         end
     end)
 
-    elementRef.Set = function(k)
-        key = k
-        keyLbl.Text = k.Name
-    end
-    elementRef.Get = function()
-        return key
-    end
+    elementRef.Set = function(k) key = k; keyLbl.Text = k.Name end
+    elementRef.Get = function() return key end
     elementRef._flag = opts.Flag
     elementRef._type = "keybind"
     return elementRef
@@ -1217,21 +1212,9 @@ local function buildColorpicker(container, id, opts)
     end
 
     local SLIDERS = {
-        { label = "H", get = function()
-            return h
-        end, set = function(x)
-            h = x
-        end },
-        { label = "S", get = function()
-            return s
-        end, set = function(x)
-            s = x
-        end },
-        { label = "V", get = function()
-            return v
-        end, set = function(x)
-            v = x
-        end },
+        { label = "H", get = function() return h end, set = function(x) h = x end },
+        { label = "S", get = function() return s end, set = function(x) s = x end },
+        { label = "V", get = function() return v end, set = function(x) v = x end },
     }
     local panelH = 6 + 6
     for _, sd in ipairs(SLIDERS) do
@@ -1301,8 +1284,7 @@ local function buildColorpicker(container, id, opts)
         end
 
         db.MouseButton1Down:Connect(function(_, inp)
-            draggingCP = true
-            fromCP(inp)
+            draggingCP = true; fromCP(inp)
         end)
         UserInputService.InputChanged:Connect(function(inp)
             if draggingCP and inp.UserInputType == Enum.UserInputType.MouseMovement then
@@ -1374,14 +1356,11 @@ local function buildColorpicker(container, id, opts)
     end)
 
     elementRef.Set = function(c3)
-        color = c3
-        h, s, v = Color3.toHSV(c3)
+        color = c3; h, s, v = Color3.toHSV(c3)
         swatch.BackgroundColor3 = c3
         hexBox.Text = "#" .. c3:ToHex():upper()
     end
-    elementRef.Get = function()
-        return color
-    end
+    elementRef.Get = function() return color end
     elementRef._flag = opts.Flag
     elementRef._type = "colorpicker"
     return elementRef
@@ -1441,15 +1420,16 @@ local function buildParagraph(container, opts)
 end
 
 -- ═════════════════════════════════════════════════════════════════════════════
---  TAB SORTER (FIXED)
+--  TAB SORTER (FIXED - COMPLETELY REWRITTEN)
 -- ═════════════════════════════════════════════════════════════════════════════
 local function createTabSorter(sideScroll, tabs)
     local categoryMap = {}
     local isExpanded = {}
 
+    -- Group tabs by category
     local function groupTabsByCategory()
         categoryMap = {}
-
+        
         for _, td in ipairs(tabs) do
             local tabName = td.lbl.Text
             local category = "General"
@@ -1475,6 +1455,7 @@ local function createTabSorter(sideScroll, tabs)
         end
     end
 
+    -- Build the category dropdown UI
     local function buildCategoryDropdown()
         -- Clear existing category headers
         for _, child in pairs(sideScroll:GetChildren()) do
@@ -1500,44 +1481,46 @@ local function createTabSorter(sideScroll, tabs)
                 isExpanded[catName] = true
             end
 
-            -- Category header
-            local header = new("Frame", {
-                Name = "CategoryHeader",
-                Size = UDim2.new(1, 0, 0, 28),
-                BackgroundColor3 = Color3.fromRGB(20, 20, 28),
-                BackgroundTransparency = 0.3,
-                ZIndex = 2,
-                LayoutOrder = layoutOrder,
-                Parent = sideScroll,
-            })
+            -- ─── Category Header ──────────────────────────────────────────────
+            local header = Instance.new("Frame")
+            header.Name = "CategoryHeader"
+            header.Size = UDim2.new(1, 0, 0, 28)
+            header.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+            header.BackgroundTransparency = 0.3
+            header.ZIndex = 2
+            header.LayoutOrder = layoutOrder
+            header.Parent = sideScroll
             layoutOrder = layoutOrder + 1
 
-            -- Category title with arrow
-            local catLbl = lbl({
-                Name = "CategoryTitle",
-                Text = catName .. (isExpanded[catName] and " ▼" or " ▶"),
-                TextColor3 = C.TextTitle,
-                TextSize = 14,
-                Size = UDim2.new(1, -24, 1, 0),
-                Position = UDim2.new(0, 8, 0, 0),
-                ZIndex = 3,
-            }, header)
+            -- ─── Category Title ──────────────────────────────────────────────
+            local catLbl = Instance.new("TextLabel")
+            catLbl.Name = "CategoryTitle"
+            catLbl.Size = UDim2.new(1, -24, 1, 0)
+            catLbl.Position = UDim2.new(0, 8, 0, 0)
+            catLbl.BackgroundTransparency = 1
+            catLbl.Text = catName .. (isExpanded[catName] and " ▼" or " ▶")
+            catLbl.TextColor3 = Color3.fromRGB(163, 163, 173)
+            catLbl.TextSize = 14
+            catLbl.FontFace = FONT
+            catLbl.TextXAlignment = Enum.TextXAlignment.Left
+            catLbl.TextYAlignment = Enum.TextYAlignment.Center
+            catLbl.ZIndex = 3
+            catLbl.Parent = header
 
-            -- Arrow image
-            local catArrow = new("ImageButton", {
-                Name = "CategoryArrow",
-                Image = A.Arrow,
-                ImageColor3 = C.TextGray,
-                Size = UDim2.fromOffset(12, 12),
-                AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, -8, 0.5, 0),
-                BackgroundTransparency = 1,
-                ZIndex = 3,
-                Parent = header,
-            })
-
+            -- ─── Arrow Image ──────────────────────────────────────────────────
+            local catArrow = Instance.new("ImageButton")
+            catArrow.Name = "CategoryArrow"
+            catArrow.Image = A.Arrow
+            catArrow.ImageColor3 = Color3.fromRGB(116, 116, 131)
+            catArrow.Size = UDim2.fromOffset(12, 12)
+            catArrow.AnchorPoint = Vector2.new(1, 0.5)
+            catArrow.Position = UDim2.new(1, -8, 0.5, 0)
+            catArrow.BackgroundTransparency = 1
+            catArrow.ZIndex = 3
+            catArrow.Parent = header
             catArrow.Rotation = isExpanded[catName] and 0 or -90
 
+            -- ─── Toggle Function ──────────────────────────────────────────────
             local function toggleCategory()
                 isExpanded[catName] = not isExpanded[catName]
                 tw(catArrow, TI_FAST, { Rotation = isExpanded[catName] and 0 or -90 })
@@ -1548,6 +1531,7 @@ local function createTabSorter(sideScroll, tabs)
                 end
             end
 
+            -- ─── Click Events ─────────────────────────────────────────────────
             catLbl.InputBegan:Connect(function(i)
                 if i.UserInputType == Enum.UserInputType.MouseButton1 then
                     toggleCategory()
@@ -1555,7 +1539,7 @@ local function createTabSorter(sideScroll, tabs)
             end)
             catArrow.MouseButton1Up:Connect(toggleCategory)
 
-            -- Set tab visibility and layout order
+            -- ─── Set Tab Visibility ───────────────────────────────────────────
             for _, td in ipairs(catTabs) do
                 td.lbl.Visible = isExpanded[catName]
                 td.lbl.LayoutOrder = layoutOrder
@@ -1568,9 +1552,7 @@ local function createTabSorter(sideScroll, tabs)
 
     return {
         Rebuild = buildCategoryDropdown,
-        GetCategories = function()
-            return categoryMap
-        end,
+        GetCategories = function() return categoryMap end,
         ExpandAll = function()
             for catName, _ in pairs(categoryMap) do
                 isExpanded[catName] = true
@@ -1839,7 +1821,7 @@ local function buildWindow(gui, opts)
         main.Visible = false
     end)
 
-    -- ─── Minimize Button (FIXED) ────────────────────────────────────────────
+    -- ─── Minimize Button ────────────────────────────────────────────────────
     local minBtn = new("ImageButton", {
         Name = "MinBtn",
         Image = A.Minimize,
@@ -1854,13 +1836,11 @@ local function buildWindow(gui, opts)
     local minimized = false
     minBtn.MouseButton1Up:Connect(function()
         minimized = not minimized
-        -- Hide/show all children except topBar
         for _, c in ipairs(main:GetChildren()) do
             if c ~= topBar then
                 c.Visible = not minimized
             end
         end
-        -- Resize the main frame
         tw(main, TI_MED, {
             Size = minimized and UDim2.fromOffset(860, 45) or UDim2.fromOffset(860, 520)
         })
@@ -1992,9 +1972,7 @@ local function buildWindow(gui, opts)
             switchTab(td)
         end)
 
-        if #tabs == 1 then
-            switchTab(td)
-        end
+        if #tabs == 1 then switchTab(td) end
 
         -- ─── Tab API ──────────────────────────────────────────────────────
         local Tab = {}
@@ -2009,39 +1987,19 @@ local function buildWindow(gui, opts)
 
         local _gb
         local function gb()
-            if not _gb then
-                _gb = buildGroupbox(page, name)
-            end
+            if not _gb then _gb = buildGroupbox(page, name) end
             return _gb
         end
 
-        function Tab:AddToggle(id, o)
-            return gb():AddToggle(id, o)
-        end
-        function Tab:AddSlider(id, o)
-            return gb():AddSlider(id, o)
-        end
-        function Tab:AddButton(o)
-            return gb():AddButton(o)
-        end
-        function Tab:AddDropdown(id, o)
-            return gb():AddDropdown(id, o)
-        end
-        function Tab:AddInput(id, o)
-            return gb():AddInput(id, o)
-        end
-        function Tab:AddKeybind(id, o)
-            return gb():AddKeybind(id, o)
-        end
-        function Tab:AddColorpicker(id, o)
-            return gb():AddColorpicker(id, o)
-        end
-        function Tab:AddLabel(o)
-            return gb():AddLabel(o)
-        end
-        function Tab:AddParagraph(o)
-            return gb():AddParagraph(o)
-        end
+        function Tab:AddToggle(id, o) return gb():AddToggle(id, o) end
+        function Tab:AddSlider(id, o) return gb():AddSlider(id, o) end
+        function Tab:AddButton(o) return gb():AddButton(o) end
+        function Tab:AddDropdown(id, o) return gb():AddDropdown(id, o) end
+        function Tab:AddInput(id, o) return gb():AddInput(id, o) end
+        function Tab:AddKeybind(id, o) return gb():AddKeybind(id, o) end
+        function Tab:AddColorpicker(id, o) return gb():AddColorpicker(id, o) end
+        function Tab:AddLabel(o) return gb():AddLabel(o) end
+        function Tab:AddParagraph(o) return gb():AddParagraph(o) end
 
         Tab._groupboxes = td.groupboxes
         Tab._name = name
@@ -2158,9 +2116,7 @@ local function buildWindow(gui, opts)
                                             element:Set(c3)
                                         elseif element._type == "keybind" then
                                             local key = Enum.KeyCode[data[flag]]
-                                            if key then
-                                                element:Set(key)
-                                            end
+                                            if key then element:Set(key) end
                                         else
                                             element:Set(data[flag])
                                         end
@@ -2232,17 +2188,9 @@ local function buildWindow(gui, opts)
         execLbl.Text = execCount .. " execution" .. (execCount == 1 and "" or "s")
     end
 
-    function W:SetVisible(v)
-        main.Visible = v
-    end
-
-    function W:Toggle()
-        main.Visible = not main.Visible
-    end
-
-    function W:GetTabSorter()
-        return tabSorter
-    end
+    function W:SetVisible(v) main.Visible = v end
+    function W:Toggle() main.Visible = not main.Visible end
+    function W:GetTabSorter() return tabSorter end
 
     function W:GetAllElements()
         local elements = {}
@@ -2268,9 +2216,7 @@ local Lib = {}
 local _gui = nil
 
 local function getGui()
-    if _gui and _gui.Parent then
-        return _gui
-    end
+    if _gui and _gui.Parent then return _gui end
     local sg = new("ScreenGui", {
         Name = "Relay",
         IgnoreGuiInset = true,
@@ -2278,12 +2224,8 @@ local function getGui()
         ResetOnSpawn = false,
         DisplayOrder = 998,
     })
-    local ok = pcall(function()
-        sg.Parent = game:GetService("CoreGui")
-    end)
-    if not ok then
-        sg.Parent = LP:WaitForChild("PlayerGui")
-    end
+    local ok = pcall(function() sg.Parent = game:GetService("CoreGui") end)
+    if not ok then sg.Parent = LP:WaitForChild("PlayerGui") end
     _gui = sg
     return sg
 end
@@ -2297,12 +2239,8 @@ function Lib:CreateWindow(opts)
 
     local key = opts.Key or Enum.KeyCode.RightShift
     UserInputService.InputBegan:Connect(function(inp, gp)
-        if gp then
-            return
-        end
-        if inp.KeyCode == key then
-            WindowAPI:Toggle()
-        end
+        if gp then return end
+        if inp.KeyCode == key then WindowAPI:Toggle() end
     end)
 
     return WindowAPI
@@ -2313,24 +2251,13 @@ function Lib:Notify(opts)
 end
 
 function Lib:Destroy()
-    if _gui then
-        _gui:Destroy()
-        _gui = nil
-    end
+    if _gui then _gui:Destroy(); _gui = nil end
     local notifGui = game.CoreGui:FindFirstChild("EthosNotifications")
-    if notifGui then
-        notifGui:Destroy()
-    end
+    if notifGui then notifGui:Destroy() end
 end
 
-function Lib:GetFlags()
-    return _G.EthosFlags or {}
-end
-
-function Lib:SetFlag(key, value)
-    _G.EthosFlags = _G.EthosFlags or {}
-    _G.EthosFlags[key] = value
-end
+function Lib:GetFlags() return _G.EthosFlags or {} end
+function Lib:SetFlag(key, value) _G.EthosFlags = _G.EthosFlags or {}; _G.EthosFlags[key] = value end
 
 loadThemeManager()
 
