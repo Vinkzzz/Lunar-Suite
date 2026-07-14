@@ -1,5 +1,4 @@
 --[[
-ego
 
 --]]
 
@@ -12,6 +11,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local LP = Players.LocalPlayer
+local Mouse = LP:GetMouse()
 
 -- ═════════════════════════════════════════════════════════════════════════════
 --  COLOURS
@@ -162,7 +162,32 @@ local function makeDraggable(handle, target)
 end
 
 -- ═════════════════════════════════════════════════════════════════════════════
---  NOTIFICATION SYSTEM (FIXED)
+--  CUSTOM CURSOR
+-- ═════════════════════════════════════════════════════════════════════════════
+local CursorImage = nil
+
+local function createCustomCursor()
+    if CursorImage then return end
+    
+    CursorImage = Instance.new("ImageLabel")
+    CursorImage.Name = "Cursor"
+    CursorImage.Image = A.Cursor
+    CursorImage.ImageColor3 = C.Red
+    CursorImage.Size = UDim2.fromOffset(20, 20)
+    CursorImage.BackgroundTransparency = 1
+    CursorImage.ZIndex = 9999
+    CursorImage.Parent = game.CoreGui:FindFirstChild("Relay") or game.CoreGui
+    CursorImage.Visible = false
+    
+    RunService.RenderStepped:Connect(function()
+        if CursorImage and CursorImage.Visible then
+            CursorImage.Position = UDim2.fromOffset(Mouse.X - 10, Mouse.Y - 10)
+        end
+    end)
+end
+
+-- ═════════════════════════════════════════════════════════════════════════════
+--  NOTIFICATION SYSTEM
 -- ═════════════════════════════════════════════════════════════════════════════
 local NOTIF_COLORS = {
     Success = Color3.fromRGB(50, 200, 100),
@@ -171,54 +196,59 @@ local NOTIF_COLORS = {
     Info = Color3.fromRGB(80, 140, 220),
 }
 
+local NotifGui = nil
+local NotifHolder = nil
+
+local function initNotifs()
+    if NotifGui and NotifGui.Parent then return end
+    
+    NotifGui = Instance.new("ScreenGui")
+    NotifGui.Name = "EthosNotifications"
+    NotifGui.IgnoreGuiInset = true
+    NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    NotifGui.DisplayOrder = 1000
+    NotifGui.ResetOnSpawn = false
+    
+    local success = pcall(function()
+        NotifGui.Parent = game:GetService("CoreGui")
+    end)
+    if not success then
+        NotifGui.Parent = LP:WaitForChild("PlayerGui")
+    end
+    
+    NotifHolder = Instance.new("Frame")
+    NotifHolder.Name = "Holder"
+    NotifHolder.Size = UDim2.fromScale(1, 1)
+    NotifHolder.BackgroundTransparency = 1
+    NotifHolder.ZIndex = 1
+    NotifHolder.Parent = NotifGui
+    
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.Padding = UDim.new(0, 6)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = NotifHolder
+    
+    local padding = Instance.new("UIPadding")
+    padding.PaddingRight = UDim.new(0, 14)
+    padding.PaddingBottom = UDim.new(0, 14)
+    padding.Parent = NotifHolder
+end
+
 local function Notify(opts)
     opts = opts or {}
     
-    -- Create notification GUI if it doesn't exist
-    local notifGui = game.CoreGui:FindFirstChild("EthosNotifications")
-    if not notifGui then
-        notifGui = Instance.new("ScreenGui")
-        notifGui.Name = "EthosNotifications"
-        notifGui.IgnoreGuiInset = true
-        notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        notifGui.DisplayOrder = 1000
-        notifGui.ResetOnSpawn = false
-        
-        local success, err = pcall(function()
-            notifGui.Parent = game:GetService("CoreGui")
-        end)
-        if not success then
-            notifGui.Parent = LP:WaitForChild("PlayerGui")
-        end
-        
-        local holder = Instance.new("Frame")
-        holder.Name = "Holder"
-        holder.Size = UDim2.fromScale(1, 1)
-        holder.BackgroundTransparency = 1
-        holder.ZIndex = 1
-        holder.Parent = notifGui
-        
-        local layout = Instance.new("UIListLayout")
-        layout.FillDirection = Enum.FillDirection.Vertical
-        layout.Padding = UDim.new(0, 6)
-        layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-        layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Parent = holder
-        
-        local padding = Instance.new("UIPadding")
-        padding.PaddingRight = UDim.new(0, 14)
-        padding.PaddingBottom = UDim.new(0, 14)
-        padding.Parent = holder
+    if not NotifHolder then
+        initNotifs()
+        task.wait(0.05)
+        if not NotifHolder then return end
     end
-    
-    local notifHolder = notifGui:FindFirstChild("Holder")
-    if not notifHolder then return end
 
     local accent = NOTIF_COLORS[opts.Type or "Info"] or NOTIF_COLORS.Info
     local duration = opts.Duration or 4
 
-    -- Create notification card
     local card = Instance.new("Frame")
     card.Name = "Notif_" .. os.clock()
     card.Size = UDim2.fromOffset(280, 70)
@@ -226,7 +256,7 @@ local function Notify(opts)
     card.BackgroundTransparency = 0
     card.ClipsDescendants = true
     card.ZIndex = 10
-    card.Parent = notifHolder
+    card.Parent = NotifHolder
     
     local cardCorner = Instance.new("UICorner")
     cardCorner.CornerRadius = UDim.new(0, 4)
@@ -238,7 +268,6 @@ local function Notify(opts)
     cardStroke.Transparency = 0.3
     cardStroke.Parent = card
 
-    -- Left accent bar
     local bar = Instance.new("Frame")
     bar.Size = UDim2.new(0, 3, 1, 0)
     bar.BackgroundColor3 = accent
@@ -248,7 +277,6 @@ local function Notify(opts)
     barCorner.CornerRadius = UDim.new(0, 2)
     barCorner.Parent = bar
 
-    -- Type pill
     local pill = Instance.new("Frame")
     pill.Size = UDim2.fromOffset(0, 16)
     pill.AutomaticSize = Enum.AutomaticSize.X
@@ -274,7 +302,6 @@ local function Notify(opts)
     pillText.ZIndex = 12
     pillText.Parent = pill
 
-    -- Title
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -14, 0, 18)
     titleLabel.Position = UDim2.new(0, 10, 0, 27)
@@ -288,7 +315,6 @@ local function Notify(opts)
     titleLabel.ZIndex = 11
     titleLabel.Parent = card
 
-    -- Message
     local msgLabel = Instance.new("TextLabel")
     msgLabel.Size = UDim2.new(1, -14, 0, 16)
     msgLabel.Position = UDim2.new(0, 10, 0, 47)
@@ -303,7 +329,6 @@ local function Notify(opts)
     msgLabel.ZIndex = 11
     msgLabel.Parent = card
 
-    -- Progress bar
     local progTrack = Instance.new("Frame")
     progTrack.Size = UDim2.new(1, 0, 0, 2)
     progTrack.Position = UDim2.new(0, 0, 1, -2)
@@ -317,30 +342,22 @@ local function Notify(opts)
     progFill.ZIndex = 13
     progFill.Parent = progTrack
 
-    -- Slide in from right
     card.Position = UDim2.fromOffset(300, 0)
     tw(card, TI_MED, { Position = UDim2.fromOffset(0, 0) })
 
-    -- Progress drain
     task.delay(0.05, function()
         tw(progFill, TweenInfo.new(duration - 0.05, Enum.EasingStyle.Linear), { Size = UDim2.fromScale(0, 1) })
     end)
 
-    -- Auto dismiss
     task.delay(duration, function()
         tw(card, TI_MED, { Position = UDim2.fromOffset(310, 0) })
-        task.delay(0.25, function()
-            card:Destroy()
-        end)
+        task.delay(0.25, function() card:Destroy() end)
     end)
 
-    -- Click to dismiss
     card.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             tw(card, TI_FAST, { Position = UDim2.fromOffset(310, 0) })
-            task.delay(0.15, function()
-                card:Destroy()
-            end)
+            task.delay(0.15, function() card:Destroy() end)
         end
     end)
 end
@@ -350,19 +367,13 @@ end
 -- ═════════════════════════════════════════════════════════════════════════════
 local ConfigSystem = {}
 
-function ConfigSystem:GetFolder()
-    return "EthosSettings"
-end
+function ConfigSystem:GetFolder() return "EthosSettings" end
 
 function ConfigSystem:EnsureFolder()
     local folder = self:GetFolder()
-    if not isfolder(folder) then
-        makefolder(folder)
-    end
+    if not isfolder(folder) then makefolder(folder) end
     local configFolder = folder .. "/configs"
-    if not isfolder(configFolder) then
-        makefolder(configFolder)
-    end
+    if not isfolder(configFolder) then makefolder(configFolder) end
 end
 
 function ConfigSystem:GetConfigs()
@@ -372,9 +383,7 @@ function ConfigSystem:GetConfigs()
     for _, file in ipairs(listfiles(folder)) do
         if file:match("%.json$") then
             local name = file:match("([^/\\]+)%.json$")
-            if name then
-                table.insert(configs, name)
-            end
+            if name then table.insert(configs, name) end
         end
     end
     table.sort(configs)
@@ -405,10 +414,7 @@ function ConfigSystem:DeleteConfig(name)
     self:EnsureFolder()
     local folder = self:GetFolder() .. "/configs"
     local path = folder .. "/" .. name .. ".json"
-    if isfile(path) then
-        delfile(path)
-        return true
-    end
+    if isfile(path) then delfile(path); return true end
     return false
 end
 
@@ -438,13 +444,10 @@ local function loadThemeManager()
                 return Color3.new(r, g, b)
             end,
             UpdateColorsUsingRegistry = function() end,
-            Notify = function(msg)
-                Notify({ Title = "Theme", Message = msg, Type = "Info" })
-            end
+            Notify = function(msg) Notify({ Title = "Theme", Message = msg, Type = "Info" }) end
         })
         return ThemeManager
     end
-
     return nil
 end
 
@@ -541,27 +544,17 @@ local function buildToggle(container, id, opts)
             _G.EthosFlags = _G.EthosFlags or {}
             _G.EthosFlags[opts.Flag] = v
         end
-        if opts.Callback then
-            task.spawn(opts.Callback, v)
-        end
+        if opts.Callback then task.spawn(opts.Callback, v) end
     end
 
     rowBtn.MouseEnter:Connect(function()
-        if not value then
-            tw(titleLbl, TI_FAST, { TextColor3 = C.TextSub })
-        end
+        if not value then tw(titleLbl, TI_FAST, { TextColor3 = C.TextSub }) end
     end)
     rowBtn.MouseLeave:Connect(function()
-        if not value then
-            tw(titleLbl, TI_FAST, { TextColor3 = C.TextEl })
-        end
+        if not value then tw(titleLbl, TI_FAST, { TextColor3 = C.TextEl }) end
     end)
-    rowBtn.MouseButton1Up:Connect(function()
-        set(not value)
-    end)
-    ckBtn.MouseButton1Up:Connect(function()
-        set(not value)
-    end)
+    rowBtn.MouseButton1Up:Connect(function() set(not value) end)
+    ckBtn.MouseButton1Up:Connect(function() set(not value) end)
 
     if value then set(true) end
 
@@ -672,13 +665,8 @@ local function buildSlider(container, id, opts)
         tw(fill, TI_FAST, { Size = UDim2.fromScale(pct, 1) })
         tw(knob, TI_FAST, { Position = UDim2.new(pct, 0, 0.5, 0) })
         valLbl.Text = tostring(v)
-        if opts.Flag then
-            _G.EthosFlags = _G.EthosFlags or {}
-            _G.EthosFlags[opts.Flag] = v
-        end
-        if opts.Callback then
-            task.spawn(opts.Callback, v)
-        end
+        if opts.Flag then _G.EthosFlags = _G.EthosFlags or {}; _G.EthosFlags[opts.Flag] = v end
+        if opts.Callback then task.spawn(opts.Callback, v) end
     end
 
     local dragging = false
@@ -690,18 +678,13 @@ local function buildSlider(container, id, opts)
     end
 
     dragBtn.MouseButton1Down:Connect(function(_, inp)
-        dragging = true
-        fromMouse(inp)
+        dragging = true; fromMouse(inp)
     end)
     UserInputService.InputChanged:Connect(function(inp)
-        if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then
-            fromMouse(inp)
-        end
+        if dragging and inp.UserInputType == Enum.UserInputType.MouseMovement then fromMouse(inp) end
     end)
     UserInputService.InputEnded:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
+        if inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
     end)
 
     elementRef.Set = applyVal
@@ -762,9 +745,7 @@ local function buildButton(container, opts)
     end)
     btn.MouseButton1Up:Connect(function()
         tw(btnFrame, TI_FAST, { BackgroundTransparency = 0.15 })
-        if opts.Callback then
-            task.spawn(opts.Callback)
-        end
+        if opts.Callback then task.spawn(opts.Callback) end
     end)
 
     return btn
@@ -791,13 +772,7 @@ local function buildDropdown(container, id, opts)
     list(nil, 4, nil, nil, holder)
     pad(8, 8, 2, 2, holder)
 
-    lbl({
-        Text = opts.Label or id,
-        TextColor3 = C.TextEl,
-        TextSize = 11,
-        Size = UDim2.new(1, 0, 0, 14),
-        ZIndex = 2,
-    }, holder)
+    lbl({ Text = opts.Label or id, TextColor3 = C.TextEl, TextSize = 11, Size = UDim2.new(1, 0, 0, 14), ZIndex = 2 }, holder)
 
     local header = new("Frame", {
         Name = "DropHeader",
@@ -858,13 +833,8 @@ local function buildDropdown(container, id, opts)
     local function setSelected(v)
         selected = v
         selLbl.Text = v
-        if opts.Flag then
-            _G.EthosFlags = _G.EthosFlags or {}
-            _G.EthosFlags[opts.Flag] = v
-        end
-        if opts.Callback then
-            task.spawn(opts.Callback, v)
-        end
+        if opts.Flag then _G.EthosFlags = _G.EthosFlags or {}; _G.EthosFlags[opts.Flag] = v end
+        if opts.Callback then task.spawn(opts.Callback, v) end
     end
 
     for _, opt in ipairs(options) do
@@ -888,27 +858,17 @@ local function buildDropdown(container, id, opts)
         optBtns[opt] = ob
 
         ob.MouseEnter:Connect(function()
-            if opt ~= selected then
-                tw(ob, TI_FAST, { BackgroundTransparency = 0.2, BackgroundColor3 = C.DropItem })
-            end
+            if opt ~= selected then tw(ob, TI_FAST, { BackgroundTransparency = 0.2, BackgroundColor3 = C.DropItem }) end
         end)
         ob.MouseLeave:Connect(function()
-            if opt ~= selected then
-                tw(ob, TI_FAST, { BackgroundTransparency = 0.45, BackgroundColor3 = C.DropItem })
-            end
+            if opt ~= selected then tw(ob, TI_FAST, { BackgroundTransparency = 0.45, BackgroundColor3 = C.DropItem }) end
         end)
         ob.MouseButton1Up:Connect(function()
             if optBtns[selected] then
-                tw(optBtns[selected], TI_FAST, {
-                    BackgroundColor3 = C.DropItem,
-                    BackgroundTransparency = 0.45,
-                })
+                tw(optBtns[selected], TI_FAST, { BackgroundColor3 = C.DropItem, BackgroundTransparency = 0.45 })
                 optBtns[selected].TextColor3 = C.TextGray
             end
-            tw(ob, TI_FAST, {
-                BackgroundColor3 = C.DropSel,
-                BackgroundTransparency = 0,
-            })
+            tw(ob, TI_FAST, { BackgroundColor3 = C.DropSel, BackgroundTransparency = 0 })
             ob.TextColor3 = C.Red
             setSelected(opt)
             isOpen = false
@@ -997,29 +957,18 @@ local function buildInput(container, id, opts)
 
     local minW = opts.MinWidth or 80
     box:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-        if box.AbsoluteSize.X < minW then
-            tbFrame.Size = UDim2.new(0, minW, 1, -6)
-        end
+        if box.AbsoluteSize.X < minW then tbFrame.Size = UDim2.new(0, minW, 1, -6) end
     end)
     tbFrame.Size = UDim2.new(0, minW, 1, -6)
 
-    box.Focused:Connect(function()
-        tw(tbStroke, TI_FAST, { Color = C.Red })
-    end)
+    box.Focused:Connect(function() tw(tbStroke, TI_FAST, { Color = C.Red }) end)
     box.FocusLost:Connect(function(enter)
         tw(tbStroke, TI_FAST, { Color = C.InputStroke })
-        if opts.Flag then
-            _G.EthosFlags = _G.EthosFlags or {}
-            _G.EthosFlags[opts.Flag] = box.Text
-        end
-        if opts.Callback then
-            task.spawn(opts.Callback, box.Text, enter)
-        end
+        if opts.Flag then _G.EthosFlags = _G.EthosFlags or {}; _G.EthosFlags[opts.Flag] = box.Text end
+        if opts.Callback then task.spawn(opts.Callback, box.Text, enter) end
     end)
     box:GetPropertyChangedSignal("Text"):Connect(function()
-        if opts.OnChange then
-            task.spawn(opts.OnChange, box.Text)
-        end
+        if opts.OnChange then task.spawn(opts.OnChange, box.Text) end
     end)
 
     elementRef.Set = function(v) box.Text = v end
@@ -1096,10 +1045,7 @@ local function buildKeybind(container, id, opts)
                 listening = false
                 tw(kbStroke, TI_FAST, { Color = C.InputStroke })
                 if conn then conn:Disconnect(); conn = nil end
-                if opts.Flag then
-                    _G.EthosFlags = _G.EthosFlags or {}
-                    _G.EthosFlags[opts.Flag] = key
-                end
+                if opts.Flag then _G.EthosFlags = _G.EthosFlags or {}; _G.EthosFlags[opts.Flag] = key end
             end
         end)
     end)
@@ -1138,13 +1084,7 @@ local function buildColorpicker(container, id, opts)
     list(nil, 4, nil, nil, holder)
     pad(8, 8, 2, 2, holder)
 
-    lbl({
-        Text = opts.Label or id,
-        TextColor3 = C.TextEl,
-        TextSize = 11,
-        Size = UDim2.new(1, 0, 0, 14),
-        ZIndex = 2,
-    }, holder)
+    lbl({ Text = opts.Label or id, TextColor3 = C.TextEl, TextSize = 11, Size = UDim2.new(1, 0, 0, 14), ZIndex = 2 }, holder)
 
     local headerRow = new("Frame", {
         Size = UDim2.new(1, 0, 0, 26),
@@ -1202,13 +1142,8 @@ local function buildColorpicker(container, id, opts)
     local function updateColor()
         color = Color3.fromHSV(h, s, v)
         swatch.BackgroundColor3 = color
-        if opts.Flag then
-            _G.EthosFlags = _G.EthosFlags or {}
-            _G.EthosFlags[opts.Flag] = color
-        end
-        if opts.Callback then
-            task.spawn(opts.Callback, color)
-        end
+        if opts.Flag then _G.EthosFlags = _G.EthosFlags or {}; _G.EthosFlags[opts.Flag] = color end
+        if opts.Callback then task.spawn(opts.Callback, color) end
     end
 
     local SLIDERS = {
@@ -1226,13 +1161,7 @@ local function buildColorpicker(container, id, opts)
         })
         panelH = panelH + 18 + 6
 
-        lbl({
-            Text = sd.label,
-            TextColor3 = C.TextGray,
-            TextSize = 10,
-            Size = UDim2.fromOffset(10, 18),
-            ZIndex = 22,
-        }, row)
+        lbl({ Text = sd.label, TextColor3 = C.TextGray, TextSize = 10, Size = UDim2.fromOffset(10, 18), ZIndex = 22 }, row)
 
         local tr = new("Frame", {
             Size = UDim2.new(1, -16, 0, 5),
@@ -1287,14 +1216,10 @@ local function buildColorpicker(container, id, opts)
             draggingCP = true; fromCP(inp)
         end)
         UserInputService.InputChanged:Connect(function(inp)
-            if draggingCP and inp.UserInputType == Enum.UserInputType.MouseMovement then
-                fromCP(inp)
-            end
+            if draggingCP and inp.UserInputType == Enum.UserInputType.MouseMovement then fromCP(inp) end
         end)
         UserInputService.InputEnded:Connect(function(inp)
-            if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-                draggingCP = false
-            end
+            if inp.UserInputType == Enum.UserInputType.MouseButton1 then draggingCP = false end
         end)
     end
 
@@ -1306,13 +1231,7 @@ local function buildColorpicker(container, id, opts)
     })
     panelH = panelH + 20 + 6
 
-    lbl({
-        Text = "HEX",
-        TextColor3 = C.TextGray,
-        TextSize = 10,
-        Size = UDim2.fromOffset(24, 20),
-        ZIndex = 22,
-    }, hexRow)
+    lbl({ Text = "HEX", TextColor3 = C.TextGray, TextSize = 10, Size = UDim2.fromOffset(24, 20), ZIndex = 22 }, hexRow)
 
     local hexBox = new("TextBox", {
         Size = UDim2.new(1, -30, 1, -4),
@@ -1333,17 +1252,14 @@ local function buildColorpicker(container, id, opts)
     local hexStroke = stroke(C.InputStroke, 1, 0, hexBox)
     pad(4, 4, 0, 0, hexBox)
 
-    hexBox.Focused:Connect(function()
-        tw(hexStroke, TI_FAST, { Color = C.Red })
-    end)
+    hexBox.Focused:Connect(function() tw(hexStroke, TI_FAST, { Color = C.Red }) end)
     hexBox.FocusLost:Connect(function()
         tw(hexStroke, TI_FAST, { Color = C.InputStroke })
         local hex = hexBox.Text:gsub("#", "")
         if #hex == 6 then
             local ok, c3 = pcall(Color3.fromHex, hex)
             if ok then
-                color = c3
-                h, s, v = Color3.toHSV(c3)
+                color = c3; h, s, v = Color3.toHSV(c3)
                 swatch.BackgroundColor3 = c3
                 updateColor()
             end
@@ -1398,13 +1314,7 @@ local function buildParagraph(container, opts)
     pad(10, 6, 4, 4, frame)
 
     if opts.Title and opts.Title ~= "" then
-        lbl({
-            Text = opts.Title,
-            TextColor3 = C.TextTitle,
-            TextSize = 13,
-            Size = UDim2.new(1, 0, 0, 18),
-            ZIndex = 3,
-        }, frame)
+        lbl({ Text = opts.Title, TextColor3 = C.TextTitle, TextSize = 13, Size = UDim2.new(1, 0, 0, 18), ZIndex = 3 }, frame)
     end
     lbl({
         Text = opts.Content or "",
@@ -1420,20 +1330,21 @@ local function buildParagraph(container, opts)
 end
 
 -- ═════════════════════════════════════════════════════════════════════════════
---  TAB SORTER (FIXED - COMPLETELY REWRITTEN)
+--  BUILT-IN TAB SORTER
+--  Auto-categorizes tabs into dropdown groups
 -- ═════════════════════════════════════════════════════════════════════════════
 local function createTabSorter(sideScroll, tabs)
     local categoryMap = {}
     local isExpanded = {}
 
-    -- Group tabs by category
+    -- Group tabs by category (auto-detected from tab name)
     local function groupTabsByCategory()
         categoryMap = {}
-        
         for _, td in ipairs(tabs) do
             local tabName = td.lbl.Text
             local category = "General"
 
+            -- Auto-categorization rules
             if string.find(tabName, "Combat") or string.find(tabName, "Parry") or string.find(tabName, "Dodge") or string.find(tabName, "Auto") then
                 category = "Combat"
             elseif string.find(tabName, "Movement") or string.find(tabName, "Speed") or string.find(tabName, "Jump") or string.find(tabName, "Flight") then
@@ -1448,9 +1359,7 @@ local function createTabSorter(sideScroll, tabs)
                 category = "SETTINGS"
             end
 
-            if not categoryMap[category] then
-                categoryMap[category] = {}
-            end
+            if not categoryMap[category] then categoryMap[category] = {} end
             table.insert(categoryMap[category], td)
         end
     end
@@ -1467,9 +1376,7 @@ local function createTabSorter(sideScroll, tabs)
         groupTabsByCategory()
 
         local categoryNames = {}
-        for cat, _ in pairs(categoryMap) do
-            table.insert(categoryNames, cat)
-        end
+        for cat, _ in pairs(categoryMap) do table.insert(categoryNames, cat) end
         table.sort(categoryNames)
 
         local layoutOrder = 0
@@ -1477,11 +1384,9 @@ local function createTabSorter(sideScroll, tabs)
         for _, catName in ipairs(categoryNames) do
             local catTabs = categoryMap[catName]
 
-            if isExpanded[catName] == nil then
-                isExpanded[catName] = true
-            end
+            if isExpanded[catName] == nil then isExpanded[catName] = true end
 
-            -- ─── Category Header ──────────────────────────────────────────────
+            -- Category Header
             local header = Instance.new("Frame")
             header.Name = "CategoryHeader"
             header.Size = UDim2.new(1, 0, 0, 28)
@@ -1492,7 +1397,7 @@ local function createTabSorter(sideScroll, tabs)
             header.Parent = sideScroll
             layoutOrder = layoutOrder + 1
 
-            -- ─── Category Title ──────────────────────────────────────────────
+            -- Category Title
             local catLbl = Instance.new("TextLabel")
             catLbl.Name = "CategoryTitle"
             catLbl.Size = UDim2.new(1, -24, 1, 0)
@@ -1507,7 +1412,7 @@ local function createTabSorter(sideScroll, tabs)
             catLbl.ZIndex = 3
             catLbl.Parent = header
 
-            -- ─── Arrow Image ──────────────────────────────────────────────────
+            -- Arrow
             local catArrow = Instance.new("ImageButton")
             catArrow.Name = "CategoryArrow"
             catArrow.Image = A.Arrow
@@ -1520,7 +1425,7 @@ local function createTabSorter(sideScroll, tabs)
             catArrow.Parent = header
             catArrow.Rotation = isExpanded[catName] and 0 or -90
 
-            -- ─── Toggle Function ──────────────────────────────────────────────
+            -- Toggle function
             local function toggleCategory()
                 isExpanded[catName] = not isExpanded[catName]
                 tw(catArrow, TI_FAST, { Rotation = isExpanded[catName] and 0 or -90 })
@@ -1531,15 +1436,12 @@ local function createTabSorter(sideScroll, tabs)
                 end
             end
 
-            -- ─── Click Events ─────────────────────────────────────────────────
             catLbl.InputBegan:Connect(function(i)
-                if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                    toggleCategory()
-                end
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then toggleCategory() end
             end)
             catArrow.MouseButton1Up:Connect(toggleCategory)
 
-            -- ─── Set Tab Visibility ───────────────────────────────────────────
+            -- Set tab visibility
             for _, td in ipairs(catTabs) do
                 td.lbl.Visible = isExpanded[catName]
                 td.lbl.LayoutOrder = layoutOrder
@@ -1548,21 +1450,18 @@ local function createTabSorter(sideScroll, tabs)
         end
     end
 
+    -- BUILD THE CATEGORIES (THIS RUNS AUTOMATICALLY)
     buildCategoryDropdown()
 
     return {
         Rebuild = buildCategoryDropdown,
         GetCategories = function() return categoryMap end,
         ExpandAll = function()
-            for catName, _ in pairs(categoryMap) do
-                isExpanded[catName] = true
-            end
+            for catName, _ in pairs(categoryMap) do isExpanded[catName] = true end
             buildCategoryDropdown()
         end,
         CollapseAll = function()
-            for catName, _ in pairs(categoryMap) do
-                isExpanded[catName] = false
-            end
+            for catName, _ in pairs(categoryMap) do isExpanded[catName] = false end
             buildCategoryDropdown()
         end,
         ToggleCategory = function(catName)
@@ -1633,15 +1532,9 @@ local function buildGroupbox(page, name)
         tw(arrowBtn, TI_FAST, { Rotation = collapsed and -90 or 0 })
         container.Visible = not collapsed
         gbFrame.AutomaticSize = collapsed and Enum.AutomaticSize.None or Enum.AutomaticSize.Y
-        if collapsed then
-            gbFrame.Size = UDim2.new(1, 0, 0, 30)
-        else
-            gbFrame.Size = UDim2.new(1, 0, 0, 0)
-            gbFrame.AutomaticSize = Enum.AutomaticSize.Y
-        end
-        if page.UpdateCanvas then
-            page:UpdateCanvas()
-        end
+        if collapsed then gbFrame.Size = UDim2.new(1, 0, 0, 30)
+        else gbFrame.Size = UDim2.new(1, 0, 0, 0); gbFrame.AutomaticSize = Enum.AutomaticSize.Y end
+        if page.UpdateCanvas then page:UpdateCanvas() end
     end)
 
     local GB = {}
@@ -1652,33 +1545,15 @@ local function buildGroupbox(page, name)
         return element
     end
 
-    function GB:AddToggle(id, o)
-        return wrapElement(id, buildToggle(container, id, o))
-    end
-    function GB:AddSlider(id, o)
-        return wrapElement(id, buildSlider(container, id, o))
-    end
-    function GB:AddButton(o)
-        return buildButton(container, o)
-    end
-    function GB:AddDropdown(id, o)
-        return wrapElement(id, buildDropdown(container, id, o))
-    end
-    function GB:AddInput(id, o)
-        return wrapElement(id, buildInput(container, id, o))
-    end
-    function GB:AddKeybind(id, o)
-        return wrapElement(id, buildKeybind(container, id, o))
-    end
-    function GB:AddColorpicker(id, o)
-        return wrapElement(id, buildColorpicker(container, id, o))
-    end
-    function GB:AddLabel(o)
-        return buildLabel(container, o)
-    end
-    function GB:AddParagraph(o)
-        return buildParagraph(container, o)
-    end
+    function GB:AddToggle(id, o) return wrapElement(id, buildToggle(container, id, o)) end
+    function GB:AddSlider(id, o) return wrapElement(id, buildSlider(container, id, o)) end
+    function GB:AddButton(o) return buildButton(container, o) end
+    function GB:AddDropdown(id, o) return wrapElement(id, buildDropdown(container, id, o)) end
+    function GB:AddInput(id, o) return wrapElement(id, buildInput(container, id, o)) end
+    function GB:AddKeybind(id, o) return wrapElement(id, buildKeybind(container, id, o)) end
+    function GB:AddColorpicker(id, o) return wrapElement(id, buildColorpicker(container, id, o)) end
+    function GB:AddLabel(o) return buildLabel(container, o) end
+    function GB:AddParagraph(o) return buildParagraph(container, o) end
 
     return GB
 end
@@ -1811,15 +1686,9 @@ local function buildWindow(gui, opts)
         ZIndex = 2,
         Parent = topBar,
     })
-    closeBtn.MouseEnter:Connect(function()
-        tw(closeBtn, TI_FAST, { ImageColor3 = C.Red })
-    end)
-    closeBtn.MouseLeave:Connect(function()
-        tw(closeBtn, TI_FAST, { ImageColor3 = C.TextGray })
-    end)
-    closeBtn.MouseButton1Up:Connect(function()
-        main.Visible = false
-    end)
+    closeBtn.MouseEnter:Connect(function() tw(closeBtn, TI_FAST, { ImageColor3 = C.Red }) end)
+    closeBtn.MouseLeave:Connect(function() tw(closeBtn, TI_FAST, { ImageColor3 = C.TextGray }) end)
+    closeBtn.MouseButton1Up:Connect(function() main.Visible = false end)
 
     -- ─── Minimize Button ────────────────────────────────────────────────────
     local minBtn = new("ImageButton", {
@@ -1837,13 +1706,9 @@ local function buildWindow(gui, opts)
     minBtn.MouseButton1Up:Connect(function()
         minimized = not minimized
         for _, c in ipairs(main:GetChildren()) do
-            if c ~= topBar then
-                c.Visible = not minimized
-            end
+            if c ~= topBar then c.Visible = not minimized end
         end
-        tw(main, TI_MED, {
-            Size = minimized and UDim2.fromOffset(860, 45) or UDim2.fromOffset(860, 520)
-        })
+        tw(main, TI_MED, { Size = minimized and UDim2.fromOffset(860, 45) or UDim2.fromOffset(860, 520) })
     end)
 
     makeDraggable(topBar, main)
@@ -1946,10 +1811,8 @@ local function buildWindow(gui, opts)
         function page:UpdateCanvas()
             local totalH = 0
             for _, child in pairs(self:GetChildren()) do
-                if child:IsA("Frame") and child.Name:find("GB_") then
-                    if child.Visible then
-                        totalH = totalH + child.Size.Y.Offset + 10
-                    end
+                if child:IsA("Frame") and child.Name:find("GB_") and child.Visible then
+                    totalH = totalH + child.Size.Y.Offset + 10
                 end
             end
             self.CanvasSize = UDim2.new(0, 0, 0, totalH + 20)
@@ -1959,18 +1822,12 @@ local function buildWindow(gui, opts)
         table.insert(tabs, td)
 
         tabLbl.MouseEnter:Connect(function()
-            if activeTab ~= td then
-                tw(tabLbl, TI_FAST, { TextColor3 = Color3.fromRGB(160, 160, 170) })
-            end
+            if activeTab ~= td then tw(tabLbl, TI_FAST, { TextColor3 = Color3.fromRGB(160, 160, 170) }) end
         end)
         tabLbl.MouseLeave:Connect(function()
-            if activeTab ~= td then
-                tw(tabLbl, TI_FAST, { TextColor3 = C.TabOff })
-            end
+            if activeTab ~= td then tw(tabLbl, TI_FAST, { TextColor3 = C.TabOff }) end
         end)
-        ck.MouseButton1Up:Connect(function()
-            switchTab(td)
-        end)
+        ck.MouseButton1Up:Connect(function() switchTab(td) end)
 
         if #tabs == 1 then switchTab(td) end
 
@@ -2007,7 +1864,8 @@ local function buildWindow(gui, opts)
         return Tab
     end
 
-    -- ─── Tab Sorter ──────────────────────────────────────────────────────────
+    -- ─── BUILT-IN TAB SORTER ─────────────────────────────────────────────────
+    -- This runs automatically and creates category headers!
     local tabSorter = createTabSorter(sideScroll, tabs)
 
     -- ─── Built-in Settings Tab ──────────────────────────────────────────────
@@ -2015,10 +1873,8 @@ local function buildWindow(gui, opts)
         local settingsTab = self:CreateTab("SETTINGS")
 
         local themeGB = settingsTab:CreateGroupbox("Themes")
-
         local tm = loadThemeManager()
-        if tm then
-            tm:ApplyToGroupbox(themeGB)
+        if tm then tm:ApplyToGroupbox(themeGB)
         else
             themeGB:AddLabel("Theme Manager not loaded")
             themeGB:AddLabel("Check your internet connection")
@@ -2040,17 +1896,10 @@ local function buildWindow(gui, opts)
             Label = "Save Config",
             Callback = function()
                 local name = configNameInput:Get()
-                if name == "" then
-                    Notify({ Title = "Config", Message = "Please enter a config name!", Type = "Warning" })
-                    return
-                end
+                if name == "" then Notify({ Title = "Config", Message = "Please enter a config name!", Type = "Warning" }); return end
 
                 local configData = {}
-                if _G.EthosFlags then
-                    for k, v in pairs(_G.EthosFlags) do
-                        configData[k] = v
-                    end
-                end
+                if _G.EthosFlags then for k, v in pairs(_G.EthosFlags) do configData[k] = v end end
 
                 for _, tab in ipairs(tabs) do
                     for _, gb in ipairs(tab.groupboxes) do
@@ -2059,11 +1908,8 @@ local function buildWindow(gui, opts)
                                 local flag = element._flag
                                 if flag then
                                     local value = element:Get()
-                                    if element._type == "colorpicker" then
-                                        value = value:ToHex()
-                                    elseif element._type == "keybind" then
-                                        value = value.Name
-                                    end
+                                    if element._type == "colorpicker" then value = value:ToHex()
+                                    elseif element._type == "keybind" then value = value.Name end
                                     configData[flag] = value
                                 end
                             end
@@ -2078,9 +1924,7 @@ local function buildWindow(gui, opts)
                         local configs = ConfigSystem:GetConfigs()
                         configDropdown:SetValues(configs)
                     end
-                else
-                    Notify({ Title = "Config", Message = "Failed to save config!", Type = "Error" })
-                end
+                else Notify({ Title = "Config", Message = "Failed to save config!", Type = "Error" }) end
             end
         })
 
@@ -2094,16 +1938,11 @@ local function buildWindow(gui, opts)
             Label = "Load Config",
             Callback = function()
                 local name = configDropdown:Get()
-                if name == "" or name == "--" then
-                    Notify({ Title = "Config", Message = "Please select a config!", Type = "Warning" })
-                    return
-                end
+                if name == "" or name == "--" then Notify({ Title = "Config", Message = "Please select a config!", Type = "Warning" }); return end
 
                 local data = ConfigSystem:LoadConfig(name)
                 if data then
-                    for k, v in pairs(data) do
-                        _G.EthosFlags[k] = v
-                    end
+                    for k, v in pairs(data) do _G.EthosFlags[k] = v end
 
                     for _, tab in ipairs(tabs) do
                         for _, gb in ipairs(tab.groupboxes) do
@@ -2112,24 +1951,17 @@ local function buildWindow(gui, opts)
                                     local flag = element._flag
                                     if flag and data[flag] ~= nil then
                                         if element._type == "colorpicker" then
-                                            local c3 = Color3.fromHex(data[flag])
-                                            element:Set(c3)
+                                            local c3 = Color3.fromHex(data[flag]); element:Set(c3)
                                         elseif element._type == "keybind" then
-                                            local key = Enum.KeyCode[data[flag]]
-                                            if key then element:Set(key) end
-                                        else
-                                            element:Set(data[flag])
-                                        end
+                                            local key = Enum.KeyCode[data[flag]]; if key then element:Set(key) end
+                                        else element:Set(data[flag]) end
                                     end
                                 end
                             end
                         end
                     end
-
                     Notify({ Title = "Config", Message = "Config '" .. name .. "' loaded!", Type = "Success" })
-                else
-                    Notify({ Title = "Config", Message = "Failed to load config!", Type = "Error" })
-                end
+                else Notify({ Title = "Config", Message = "Failed to load config!", Type = "Error" }) end
             end
         })
 
@@ -2137,10 +1969,7 @@ local function buildWindow(gui, opts)
             Label = "Delete Config",
             Callback = function()
                 local name = configDropdown:Get()
-                if name == "" or name == "--" then
-                    Notify({ Title = "Config", Message = "Please select a config!", Type = "Warning" })
-                    return
-                end
+                if name == "" or name == "--" then Notify({ Title = "Config", Message = "Please select a config!", Type = "Warning" }); return end
 
                 local success = ConfigSystem:DeleteConfig(name)
                 if success then
@@ -2148,9 +1977,7 @@ local function buildWindow(gui, opts)
                     local configs = ConfigSystem:GetConfigs()
                     configDropdown:SetValues(configs)
                     configDropdown:Set(configs[1] or "")
-                else
-                    Notify({ Title = "Config", Message = "Failed to delete config!", Type = "Error" })
-                end
+                else Notify({ Title = "Config", Message = "Failed to delete config!", Type = "Error" }) end
             end
         })
 
@@ -2162,15 +1989,10 @@ local function buildWindow(gui, opts)
                     for _, gb in ipairs(tab.groupboxes) do
                         if gb._elements then
                             for id, element in pairs(gb._elements) do
-                                if element._type == "toggle" then
-                                    element:Set(false)
-                                elseif element._type == "slider" then
-                                    element:Set(0)
-                                elseif element._type == "input" then
-                                    element:Set("")
-                                elseif element._type == "keybind" then
-                                    element:Set(Enum.KeyCode.Unknown)
-                                end
+                                if element._type == "toggle" then element:Set(false)
+                                elseif element._type == "slider" then element:Set(0)
+                                elseif element._type == "input" then element:Set("")
+                                elseif element._type == "keybind" then element:Set(Enum.KeyCode.Unknown) end
                             end
                         end
                     end
@@ -2235,6 +2057,9 @@ function Lib:CreateWindow(opts)
     local gui = getGui()
     _G.EthosFlags = _G.EthosFlags or {}
 
+    -- Create custom cursor
+    createCustomCursor()
+
     local WindowAPI, mainFrame = buildWindow(gui, opts)
 
     local key = opts.Key or Enum.KeyCode.RightShift
@@ -2254,10 +2079,15 @@ function Lib:Destroy()
     if _gui then _gui:Destroy(); _gui = nil end
     local notifGui = game.CoreGui:FindFirstChild("EthosNotifications")
     if notifGui then notifGui:Destroy() end
+    if CursorImage then CursorImage:Destroy(); CursorImage = nil end
 end
 
 function Lib:GetFlags() return _G.EthosFlags or {} end
 function Lib:SetFlag(key, value) _G.EthosFlags = _G.EthosFlags or {}; _G.EthosFlags[key] = value end
+
+function Lib:SetCursorVisible(visible)
+    if CursorImage then CursorImage.Visible = visible end
+end
 
 loadThemeManager()
 
