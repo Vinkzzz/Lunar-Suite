@@ -1,11 +1,5 @@
 --[[
-╔══════════════════════════════════════════════════════════════════╗
-║           ETHOS // RE  ·  UI Library  v2.2                       ║
-║  Features: Tab Sorter (Dropdown Categories)                     ║
-║            Built-in Settings Tab (Themes + Config)              ║
-║            Save/Load Config System                              ║
-║            ThemeManager Integration                             ║
-╚══════════════════════════════════════════════════════════════════╝
+sum
 --]]
 
 -- ═══════════════════════════════════════════════════════════════
