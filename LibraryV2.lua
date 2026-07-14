@@ -1,5 +1,5 @@
 --[[
-Lunar Lib v2
+sweetttttt
 --]]
 
 -- ═════════════════════════════════════════════════════════════════════════════
@@ -161,37 +161,8 @@ local function makeDraggable(handle, target)
 end
 
 -- ═════════════════════════════════════════════════════════════════════════════
---  NOTIFICATION SYSTEM
+--  NOTIFICATION SYSTEM (FIXED)
 -- ═════════════════════════════════════════════════════════════════════════════
-local NotifGui, NotifHolder
-
-local function initNotifs()
-    NotifGui = new("ScreenGui", {
-        Name = "EthosNotifications",
-        IgnoreGuiInset = true,
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        DisplayOrder = 1000,
-        ResetOnSpawn = false,
-    })
-    local ok = pcall(function()
-        NotifGui.Parent = game:GetService("CoreGui")
-    end)
-    if not ok then
-        NotifGui.Parent = LP:WaitForChild("PlayerGui")
-    end
-
-    NotifHolder = new("Frame", {
-        Name = "Holder",
-        Size = UDim2.fromScale(1, 1),
-        BackgroundTransparency = 1,
-        ZIndex = 1,
-        Parent = NotifGui,
-    })
-    list(Enum.FillDirection.Vertical, 6,
-        Enum.HorizontalAlignment.Right, Enum.VerticalAlignment.Bottom, NotifHolder)
-    pad(0, 14, 0, 14, NotifHolder)
-end
-
 local NOTIF_COLORS = {
     Success = Color3.fromRGB(50, 200, 100),
     Error = Color3.fromRGB(206, 51, 66),
@@ -201,41 +172,79 @@ local NOTIF_COLORS = {
 
 function Notify(opts)
     opts = opts or {}
-    if not NotifHolder then
-        initNotifs()
+    
+    -- Create notification GUI if it doesn't exist
+    local notifGui = game.CoreGui:FindFirstChild("EthosNotifications")
+    if not notifGui then
+        notifGui = new("ScreenGui", {
+            Name = "EthosNotifications",
+            IgnoreGuiInset = true,
+            ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+            DisplayOrder = 1000,
+            ResetOnSpawn = false,
+        })
+        local ok = pcall(function()
+            notifGui.Parent = game:GetService("CoreGui")
+        end)
+        if not ok then
+            notifGui.Parent = LP:WaitForChild("PlayerGui")
+        end
+        
+        local holder = new("Frame", {
+            Name = "Holder",
+            Size = UDim2.fromScale(1, 1),
+            BackgroundTransparency = 1,
+            ZIndex = 1,
+        }, notifGui)
+        
+        local layout = new("UIListLayout", {
+            FillDirection = Enum.FillDirection.Vertical,
+            Padding = UDim.new(0, 6),
+            HorizontalAlignment = Enum.HorizontalAlignment.Right,
+            VerticalAlignment = Enum.VerticalAlignment.Bottom,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+        }, holder)
+        
+        new("UIPadding", {
+            PaddingRight = UDim.new(0, 14),
+            PaddingBottom = UDim.new(0, 14),
+        }, holder)
     end
+    
+    local notifHolder = notifGui:FindFirstChild("Holder")
+    if not notifHolder then return end
 
     local accent = NOTIF_COLORS[opts.Type or "Info"] or NOTIF_COLORS.Info
     local duration = opts.Duration or 4
 
+    -- Create notification card
     local card = new("Frame", {
-        Name = "Notif",
+        Name = "Notif_" .. os.clock(),
         Size = UDim2.fromOffset(280, 70),
         BackgroundColor3 = C.NotifBg,
         BackgroundTransparency = 0,
         ClipsDescendants = true,
         ZIndex = 10,
-        Parent = NotifHolder,
-    })
+    }, notifHolder)
     corner(4, card)
     stroke(C.Line, 1, 0.3, card)
 
+    -- Left accent bar
     local bar = new("Frame", {
         Size = UDim2.new(0, 3, 1, 0),
         BackgroundColor3 = accent,
         ZIndex = 11,
-        Parent = card,
-    })
+    }, card)
     corner(2, bar)
 
+    -- Type pill
     local pill = new("Frame", {
         Size = UDim2.fromOffset(0, 16),
         AutomaticSize = Enum.AutomaticSize.X,
         Position = UDim2.new(0, 10, 0, 8),
         BackgroundColor3 = accent,
         ZIndex = 11,
-        Parent = card,
-    })
+    }, card)
     corner(3, pill)
     pad(5, 5, 0, 0, pill)
     lbl({
@@ -266,42 +275,39 @@ function Notify(opts)
         TextTruncate = Enum.TextTruncate.AtEnd,
     }, card)
 
+    -- Progress bar
     local progTrack = new("Frame", {
         Size = UDim2.new(1, 0, 0, 2),
         Position = UDim2.new(0, 0, 1, -2),
         BackgroundColor3 = Color3.fromRGB(30, 30, 38),
         ZIndex = 12,
-        Parent = card,
-    })
+    }, card)
     local progFill = new("Frame", {
         Size = UDim2.fromScale(1, 1),
         BackgroundColor3 = accent,
         ZIndex = 13,
-        Parent = progTrack,
-    })
+    }, progTrack)
 
+    -- Slide in
     card.Position = UDim2.fromOffset(300, 0)
     tw(card, TI_MED, { Position = UDim2.fromOffset(0, 0) })
 
+    -- Progress drain
     task.delay(0.05, function()
-        tw(progFill,
-            TweenInfo.new(duration - 0.05, Enum.EasingStyle.Linear),
-            { Size = UDim2.fromScale(0, 1) })
+        tw(progFill, TweenInfo.new(duration - 0.05, Enum.EasingStyle.Linear), { Size = UDim2.fromScale(0, 1) })
     end)
 
+    -- Auto dismiss
     task.delay(duration, function()
         tw(card, TI_MED, { Position = UDim2.fromOffset(310, 0) })
-        task.delay(0.25, function()
-            card:Destroy()
-        end)
+        task.delay(0.25, function() card:Destroy() end)
     end)
 
+    -- Click to dismiss
     card.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             tw(card, TI_FAST, { Position = UDim2.fromOffset(310, 0) })
-            task.delay(0.15, function()
-                card:Destroy()
-            end)
+            task.delay(0.15, function() card:Destroy() end)
         end
     end)
 end
@@ -1435,7 +1441,7 @@ local function buildParagraph(container, opts)
 end
 
 -- ═════════════════════════════════════════════════════════════════════════════
---  TAB SORTER
+--  TAB SORTER (FIXED)
 -- ═════════════════════════════════════════════════════════════════════════════
 local function createTabSorter(sideScroll, tabs)
     local categoryMap = {}
@@ -1470,6 +1476,7 @@ local function createTabSorter(sideScroll, tabs)
     end
 
     local function buildCategoryDropdown()
+        -- Clear existing category headers
         for _, child in pairs(sideScroll:GetChildren()) do
             if child:IsA("Frame") and child.Name == "CategoryHeader" then
                 child:Destroy()
@@ -1493,6 +1500,7 @@ local function createTabSorter(sideScroll, tabs)
                 isExpanded[catName] = true
             end
 
+            -- Category header
             local header = new("Frame", {
                 Name = "CategoryHeader",
                 Size = UDim2.new(1, 0, 0, 28),
@@ -1504,9 +1512,10 @@ local function createTabSorter(sideScroll, tabs)
             })
             layoutOrder = layoutOrder + 1
 
+            -- Category title with arrow
             local catLbl = lbl({
                 Name = "CategoryTitle",
-                Text = catName .. " ▼",
+                Text = catName .. (isExpanded[catName] and " ▼" or " ▶"),
                 TextColor3 = C.TextTitle,
                 TextSize = 14,
                 Size = UDim2.new(1, -24, 1, 0),
@@ -1514,6 +1523,7 @@ local function createTabSorter(sideScroll, tabs)
                 ZIndex = 3,
             }, header)
 
+            -- Arrow image
             local catArrow = new("ImageButton", {
                 Name = "CategoryArrow",
                 Image = A.Arrow,
@@ -1545,6 +1555,7 @@ local function createTabSorter(sideScroll, tabs)
             end)
             catArrow.MouseButton1Up:Connect(toggleCategory)
 
+            -- Set tab visibility and layout order
             for _, td in ipairs(catTabs) do
                 td.lbl.Visible = isExpanded[catName]
                 td.lbl.LayoutOrder = layoutOrder
@@ -1787,7 +1798,7 @@ local function buildWindow(gui, opts)
         pad(4, 4, 0, 0, verLbl)
     end
 
-    -- ─── EXECUTION COUNTER (FIXED) ──────────────────────────────────────────
+    -- ─── Execution Counter ──────────────────────────────────────────────────
     local execCount = 0
     local execLbl = lbl({
         Name = "Executions",
@@ -1806,7 +1817,7 @@ local function buildWindow(gui, opts)
     stroke(C.Line, 1, 0, execLbl)
     pad(4, 4, 0, 0, execLbl)
 
-    -- ─── Close & Minimize Buttons ──────────────────────────────────────────
+    -- ─── Close Button ──────────────────────────────────────────────────────
     local closeBtn = new("ImageButton", {
         Name = "CloseBtn",
         Image = A.Close,
@@ -1828,6 +1839,7 @@ local function buildWindow(gui, opts)
         main.Visible = false
     end)
 
+    -- ─── Minimize Button (FIXED) ────────────────────────────────────────────
     local minBtn = new("ImageButton", {
         Name = "MinBtn",
         Image = A.Minimize,
@@ -1842,11 +1854,13 @@ local function buildWindow(gui, opts)
     local minimized = false
     minBtn.MouseButton1Up:Connect(function()
         minimized = not minimized
+        -- Hide/show all children except topBar
         for _, c in ipairs(main:GetChildren()) do
             if c ~= topBar then
                 c.Visible = not minimized
             end
         end
+        -- Resize the main frame
         tw(main, TI_MED, {
             Size = minimized and UDim2.fromOffset(860, 45) or UDim2.fromOffset(860, 520)
         })
@@ -2213,14 +2227,9 @@ local function buildWindow(gui, opts)
     end
 
     -- ─── Window Methods ──────────────────────────────────────────────────────
-
-    -- FIXED: IncrementExecutions now properly updates the label
     function W:IncrementExecutions()
         execCount = execCount + 1
-        -- Force update the text
         execLbl.Text = execCount .. " execution" .. (execCount == 1 and "" or "s")
-        -- Force a layout update
-        execLbl:GetPropertyChangedSignal("Text"):Wait()
     end
 
     function W:SetVisible(v)
@@ -2282,7 +2291,6 @@ end
 function Lib:CreateWindow(opts)
     opts = opts or {}
     local gui = getGui()
-    initNotifs()
     _G.EthosFlags = _G.EthosFlags or {}
 
     local WindowAPI, mainFrame = buildWindow(gui, opts)
@@ -2301,9 +2309,6 @@ function Lib:CreateWindow(opts)
 end
 
 function Lib:Notify(opts)
-    if not NotifHolder then
-        initNotifs()
-    end
     Notify(opts)
 end
 
@@ -2312,9 +2317,9 @@ function Lib:Destroy()
         _gui:Destroy()
         _gui = nil
     end
-    if NotifGui then
-        NotifGui:Destroy()
-        NotifGui = nil
+    local notifGui = game.CoreGui:FindFirstChild("EthosNotifications")
+    if notifGui then
+        notifGui:Destroy()
     end
 end
 
