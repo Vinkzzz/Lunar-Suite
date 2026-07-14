@@ -1,16 +1,5 @@
 --[[
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                     ETHOS UI LIBRARY v2.3 (COMPLETE FIX)                    ║
-║  ALL issues fixed:                                                         ║
-║  ✓ Tabs now load and display correctly                                     ║
-║  ✓ Tab Sorter auto-categorizes tabs into dropdown groups                  ║
-║  ✓ Groupboxes display properly                                             ║
-║  ✓ All UI elements work (Toggle, Slider, Dropdown, etc.)                  ║
-║  ✓ Custom cursor works                                                    ║
-║  ✓ Notifications work                                                     ║
-║  ✓ Minimize button works                                                  ║
-║  ✓ Built-in Settings tab with Themes + Config                             ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+
 --]]
 
 -- ═════════════════════════════════════════════════════════════════════════════
