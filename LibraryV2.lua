@@ -1,10 +1,5 @@
 --[[
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                     ETHOS UI LIBRARY v2.2 (FIXED)                          ║
-║  Fixed: Execution Counter now updates properly                             ║
-║  Fixed: Tab Sorter categories now display properly                         ║
-║  Fixed: All UI elements working                                           ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+Lunar Lib v2
 --]]
 
 -- ═════════════════════════════════════════════════════════════════════════════
